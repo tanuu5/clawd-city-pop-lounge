@@ -10,7 +10,7 @@
   <img src="docs/screenshots/lounge.webp" width="800" alt="夜景の見えるラウンジの全景から、ソファの Clawd のアップに切り替わり、Clawd がつつかれて跳ねる">
 </p>
 
-<p align="center"><b><a href="https://tanuu5.github.io/clawd-city-pop-lounge/">▶ ブラウザで開く</a></b>（インストール不要・音が出ます）</p>
+<p align="center"><b><a href="https://tanuu5.github.io/clawd-city-pop-lounge/">▶ ブラウザで開く</a></b>（インストール不要・音が出ます）　／　<b><a href="https://youtu.be/FQ4wE-IDKeE">▶ 作業用BGM 1時間（YouTube）</a></b></p>
 
 **Claude Code × Claude Opus 5.5（XHIGH）** で作りました。
 
@@ -34,6 +34,16 @@
 </table>
 
 画像と動画は、すべて実際の画面です（音楽を鳴らしながら撮りました）。
+
+## 作業用 BGM の動画（YouTube）
+
+このラウンジを 1 時間流しっぱなしにして録画した、作業用 BGM の動画です。夕暮れ → 夜 → 雨の夜 → 夜明けと時間が移り、全 20 曲が流れて、最後は Clawd が眠って終わります。
+
+<p align="center">
+  <a href="https://youtu.be/FQ4wE-IDKeE"><img src="docs/screenshots/bgm-video.jpg" width="640" alt="YouTube の動画「作業用BGM 1時間」のサムネイル。夜景の見える部屋のソファに座る Clawd"></a>
+</p>
+
+<p align="center"><b><a href="https://youtu.be/FQ4wE-IDKeE">【作業用BGM】Claudeがその場で作曲したシティポップ 1時間｜夕暮れから夜明けまで</a></b></p>
 
 ## 使い方
 
@@ -68,6 +78,7 @@
 
 ## 更新履歴
 
+- **2026-10-12**：作業用 BGM の動画（1 時間）を YouTube で公開
 - **2026-10-11**：夜明けの時間帯と、作業用 BGM の動画を録るための動画モード（`?video=<分>`）を追加
 - **2026-10-11**：公開
 
