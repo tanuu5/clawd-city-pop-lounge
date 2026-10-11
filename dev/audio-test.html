@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><title>audio test</title></head>
+<body style="background:#111;color:#ddd;font:14px monospace">
+<pre id="out">ready</pre>
+<script type="module">
+import { renderOffline, trackAt, CHANNEL_NAMES } from '/src/audio/engine.js';
+import { generateSong } from '/src/audio/composer.js';
+
+function stats(buf) {
+  const L = buf.getChannelData(0), R = buf.getChannelData(1);
+  let peak = 0, sum = 0, nan = 0;
+  const win = Math.floor(buf.sampleRate * 0.4); let maxWin = 0, acc = 0;
+  for (let i = 0; i < L.length; i++) {
+    const a = L[i], b = R[i];
+    if (!Number.isFinite(a) || !Number.isFinite(b)) { nan++; continue; }
+    peak = Math.max(peak, Math.abs(a), Math.abs(b));
+    const e = (a * a + b * b) / 2; sum += e; acc += e;
+    if ((i + 1) % win === 0) { maxWin = Math.max(maxWin, acc / win); acc = 0; }
+  }
+  const db = (x) => +(20 * Math.log10(Math.max(1e-9, x))).toFixed(1);
+  return { peakDb: db(peak), rmsDb: db(Math.sqrt(sum / L.length)), maxShortRmsDb: db(Math.sqrt(maxWin)), nan };
+}
+
+function wav(buf) {
+  const n = buf.length, ch = 2, sr = buf.sampleRate;
+  const out = new DataView(new ArrayBuffer(44 + n * ch * 2));
+  const w = (o, s) => [...s].forEach((c, i) => out.setUint8(o + i, c.charCodeAt(0)));
+  w(0, 'RIFF'); out.setUint32(4, 36 + n * ch * 2, true); w(8, 'WAVE'); w(12, 'fmt ');
+  out.setUint32(16, 16, true); out.setUint16(20, 1, true); out.setUint16(22, ch, true); out.setUint32(24, sr, true);
+  out.setUint32(28, sr * ch * 2, true); out.setUint16(32, ch * 2, true); out.setUint16(34, 16, true); w(36, 'data'); out.setUint32(40, n * ch * 2, true);
+  const L = buf.getChannelData(0), R = buf.getChannelData(1);
+  for (let i = 0; i < n; i++) {
+    out.setInt16(44 + i * 4, Math.max(-1, Math.min(1, L[i])) * 32767, true);
+    out.setInt16(46 + i * 4, Math.max(-1, Math.min(1, R[i])) * 32767, true);
+  }
+  return out.buffer;
+}
+
+window.audioTest = async ({ track = 0, from = null, section = 'C', seconds = 16, solo = null, save = null, measure = false } = {}) => {
+  const t = trackAt(track);
+  const song = generateSong(t.seed, t);
+  let start = from;
+  if (start == null) { const s = song.sections.find((x) => x.type === section) || song.sections[0]; start = s.startBar * 16; }
+  const buf = await renderOffline(song, { from: start, seconds, solo, measure });
+  const st = stats(buf);
+  if (save) await fetch('/__save?name=' + encodeURIComponent(save), { method: 'POST', body: wav(buf) });
+  return { title: song.title, bpm: song.bpm, style: song.style, ...st };
+};
+
+window.channelLevels = async ({ track = 0, section = 'C', seconds = 8 } = {}) => {
+  const out = {};
+  for (const c of CHANNEL_NAMES) { if (c === 'fx') continue; out[c] = (await window.audioTest({ track, section, seconds, solo: [c], measure: true })).rmsDb; }
+  out.all = (await window.audioTest({ track, section, seconds, measure: true })).rmsDb;
+  return out;
+};
+// 1 曲まるごと書き出して、1 秒ごとの音量を返す（無音や音割れの区間を探す）
+window.fullSong = async ({ track = 0, save = null } = {}) => {
+  const t = trackAt(track);
+  const song = generateSong(t.seed, t);
+  const secs = (song.lengthSteps / 4) * 60 / song.bpm + 3;
+  const buf = await renderOffline(song, { from: 0, seconds: secs });
+  const L = buf.getChannelData(0), R = buf.getChannelData(1), sr = buf.sampleRate;
+  const per = [];
+  let peak = 0, nan = 0;
+  for (let s = 0; s < Math.floor(secs); s++) {
+    let e = 0, p = 0;
+    for (let i = s * sr; i < (s + 1) * sr && i < L.length; i++) { const a = L[i], b = R[i]; if (!Number.isFinite(a + b)) { nan++; continue; } e += (a * a + b * b) / 2; p = Math.max(p, Math.abs(a), Math.abs(b)); }
+    per.push(+(10 * Math.log10(Math.max(1e-12, e / sr))).toFixed(0));
+    peak = Math.max(peak, p);
+  }
+  if (save) await fetch('/__save?name=' + encodeURIComponent(save), { method: 'POST', body: wav(buf) });
+  return { title: song.title, secs: +secs.toFixed(1), peakDb: +(20 * Math.log10(peak)).toFixed(1), nan, sections: song.sections.map((x) => x.label + '@' + ((x.startBar * 16 / 4) * 60 / song.bpm).toFixed(0)).join(' '), rmsPerSec: per.join(',') };
+};
+document.getElementById('out').textContent = 'loaded';
+window.__ready = true;
+</script>
+</body></html>

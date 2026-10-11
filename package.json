@@ -1,0 +1,20 @@
+{
+  "name": "clawd-city-pop-lounge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Clawd が近未来の高層ラウンジでシティポップを聴きながらくつろぐ 3D アプリ",
+  "author": "たぬ",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "vite": "^8.3.1"
+  }
+}
