@@ -24,7 +24,7 @@ export function setupVideoMode({ minutes, music, setEnv, post, anim, director })
   post.film.uniforms.uGrain.value = 0.022; // 動画の圧縮で粒がつぶれて濁らないよう、少し控えめに
 
   const state = {
-    ready: true, started: false, done: false, t0: 0, t: 0, phase: -1,
+    ready: true, started: false, done: false, t0: 0, t: 0, phase: -1, frames: 0,
     log: [], ending: null, overlay: null, recorder: null, chain: null, recName: null,
   };
 
@@ -133,9 +133,10 @@ export function setupVideoMode({ minutes, music, setEnv, post, anim, director })
     },
     status() {
       const s = music.song;
-      return { t: +now().toFixed(1), total, phase: SCHEDULE[state.phase]?.[1], track: s ? `${s.no} ${s.title}` : null, ending: !!state.ending, done: state.done, songs: state.log.length };
+      return { t: +now().toFixed(1), total, frames: state.frames, phase: SCHEDULE[state.phase]?.[1], track: s ? `${s.no} ${s.title}` : null, ending: !!state.ending, done: state.done, songs: state.log.length };
     },
     update() {
+      state.frames++;
       if (!state.started) { post.film.uniforms.uFade.value = 1; return; }
       const t = now();
       // 時間帯
