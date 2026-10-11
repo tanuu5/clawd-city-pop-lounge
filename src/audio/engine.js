@@ -364,6 +364,27 @@ export class MusicEngine {
     if (this.state !== 'playing') this.play();
   }
 
+  /** 録画用：出力（曲＋環境音）を MediaStream で取り出す。 */
+  recordStream() {
+    this.ensure();
+    if (!this.recDest) {
+      this.recDest = this.ctx.createMediaStreamDestination();
+      this.mixer.vol.connect(this.recDest);
+      this.ambience.out.connect(this.recDest);
+    }
+    return this.recDest.stream;
+  }
+
+  /** 止める（動画の終わり）。予約済みの音は絞って消す。 */
+  stop() {
+    if (!this.ctx) return;
+    if (this.chans) this.chans.release(this.ctx.currentTime);
+    this.song = null;
+    this.state = 'idle';
+    this.updateAmbience();
+    this.emit('state');
+  }
+
   /** Clawd をつついたときの小さな音。 */
   blip() {
     if (!this.ctx || !this.inst || this.ctx.state !== 'running') return;
@@ -390,7 +411,10 @@ export class MusicEngine {
       if (t >= now - 0.02) playEvent(this.inst, this.song, e, t);
       this.ptr++;
     }
-    if (now > this.end) this.load(this.trackIndex + 1);
+    if (now > this.end) {
+      if (this.onSongEnd && this.onSongEnd(this.trackIndex) === false) { this.stop(); return; }
+      this.load(this.trackIndex + 1);
+    }
   }
 
   /** 画面側が毎フレーム読む情報（拍・セクション・コード・キック・音量）。 */

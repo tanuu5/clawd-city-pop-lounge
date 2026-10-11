@@ -40,6 +40,18 @@ export const PRESETS = {
     lamp: 1.1, neon: 1, cove: c('#5f8cff'), coveI: 0.85, down: 0.4,
     exposure: 1.05, bloom: 0.66, rain: 1, envI: 0.9,
   },
+  dawn: {
+    label: '夜明け',
+    skyTop: c('#2a4a86'), skyMid: c('#8eaad8'), skyHorizon: c('#ffd9b4'), cloud: c('#f4dcd4'),
+    sunDir: new THREE.Vector3(0.68, 0.02, -0.73), sun: 0.7, sunColor: c('#ffe2b0'),
+    moonDir: new THREE.Vector3(-0.5, 0.45, -0.72), moon: 0.3, stars: 0.08,
+    fog: c('#a9b6d0'), fogDensity: 0.0007,
+    lit: 0.18, warm: 0.65, facade: c('#232838'), cityGlow: 0.4, streets: 0.3,
+    hemiSky: c('#b4c4e8'), hemiGround: c('#3a3846'), hemi: 0.8,
+    winLight: c('#ffe0b8'), winLightI: 1.8,
+    lamp: 0.4, neon: 0.55, cove: c('#a8c8ff'), coveI: 0.4, down: 0.5,
+    exposure: 1.0, bloom: 0.38, rain: 0, envI: 0.9,
+  },
 };
 export const PRESET_KEYS = Object.keys(PRESETS);
 
@@ -53,9 +65,10 @@ export class Env {
     this.dur = 4;
     this.changed = true;
   }
-  set(key, instant = false) {
+  set(key, instant = false, dur = 4) {
     if (!PRESETS[key]) return;
     this.key = key;
+    this.dur = dur;
     this.from = clonePreset(this.cur);
     this.t = instant ? 1 : 0;
     if (instant) this.cur = clonePreset(PRESETS[key]);

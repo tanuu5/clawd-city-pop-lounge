@@ -80,6 +80,7 @@ export function createUI({ music, env, director, onEnv, onStart, store }) {
       case 'Digit1': pickEnv('sunset'); break;
       case 'Digit2': pickEnv('night'); break;
       case 'Digit3': pickEnv('rain'); break;
+      case 'Digit4': pickEnv('dawn'); break;
       case 'KeyC': pickCam(director.mode === 'auto' ? 'free' : 'auto'); break;
       case 'KeyH': hide(); break;
       case 'KeyM': vol.value = +vol.value > 0 ? 0 : store.get('vol', 0.75) || 0.75; music.setVolume(+vol.value); break;

@@ -7,10 +7,10 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 
 const FilmShader = {
-  uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uGrain: { value: 0.045 }, uVignette: { value: 0.9 }, uCA: { value: 0.001 }, uLift: { value: new THREE.Color(0.035, 0.02, 0.05) }, uFade: { value: 0 } },
+  uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uGrain: { value: 0.045 }, uVignette: { value: 0.9 }, uCA: { value: 0.001 }, uLift: { value: new THREE.Color(0.035, 0.02, 0.05) }, uFade: { value: 0 }, tOverlay: { value: null }, uOverlay: { value: 0 } },
   vertexShader: /* glsl */`varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
   fragmentShader: /* glsl */`
-    uniform sampler2D tDiffuse; uniform float uTime, uGrain, uVignette, uCA, uFade; uniform vec3 uLift;
+    uniform sampler2D tDiffuse, tOverlay; uniform float uTime, uGrain, uVignette, uCA, uFade, uOverlay; uniform vec3 uLift;
     varying vec2 vUv;
     float hash(vec2 p){ p = fract(p * vec2(443.897, 441.423)); p += dot(p, p.yx + 19.19); return fract((p.x + p.y) * p.x); }
     void main() {
@@ -27,6 +27,8 @@ const FilmShader = {
       col *= mix(0.62, 1.0, vig);
       float g = hash(vUv * 1000.0 + fract(uTime * 13.7)) - 0.5;
       col += g * uGrain * (0.6 + 0.4 * (1.0 - dot(col, vec3(0.299, 0.587, 0.114))));
+      // 文字の重ね（動画モードの曲名など。録画にも写るようにキャンバスの中で合成する）
+      if (uOverlay > 0.0) { vec4 o = texture2D(tOverlay, vUv); col = mix(col, o.rgb, clamp(o.a * uOverlay, 0.0, 1.0)); }
       col *= 1.0 - uFade;
       gl_FragColor = vec4(max(col, 0.0), 1.0);
     }`,

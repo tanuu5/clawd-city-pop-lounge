@@ -9,8 +9,10 @@ import { createPost } from './scene/post.js';
 import { Director, SHOTS } from './scene/director.js';
 import { createUI } from './ui.js';
 import { installDevHarness } from '../dev/devHarness.js';
+import { setupVideoMode } from './video.js';
 
 const params = new URLSearchParams(location.search);
+const VIDEO = params.has('video') ? (+params.get('video') || 60) : 0; // 動画モード（分）
 
 // 設定の保存（読めない環境でも動くように）
 const store = {
@@ -124,9 +126,9 @@ function captureEnv() {
   hidden.forEach((o) => { o.visible = true; });
 }
 
-function setEnv(key, instant = false) {
-  env.set(key, instant);
-  store.set('env', key);
+function setEnv(key, instant = false, dur = 4) {
+  env.set(key, instant, dur);
+  if (!VIDEO) store.set('env', key);
   music.setRain(key === 'rain');
 }
 
@@ -138,7 +140,16 @@ const ui = createUI({
 });
 if (store.get('cam', 'auto') === 'free') director.setMode('free');
 document.querySelectorAll('[data-cam]').forEach((b) => b.classList.toggle('on', b.dataset.cam === director.mode));
-if (params.has('clean')) { document.body.classList.add('clean'); document.getElementById('start').classList.add('hide'); }
+if (params.has('clean') || VIDEO) { document.body.classList.add('clean'); document.getElementById('start').classList.add('hide'); }
+
+// 動画モード：録画スクリプトが __video.begin() を呼ぶ。手で見るときは、クリックか Space で始まる
+const video = VIDEO ? setupVideoMode({ minutes: VIDEO, music, setEnv, post, anim, director }) : null;
+if (video) {
+  window.__video = video;
+  const go = (e) => { if (video.state.started) return; e.preventDefault(); e.stopImmediatePropagation(); video.begin(); };
+  addEventListener('pointerdown', go, { capture: true });
+  addEventListener('keydown', go, { capture: true });
+}
 music.setRain(env.key === 'rain');
 
 // Clawd をクリック（ドラッグと区別する）
@@ -196,6 +207,7 @@ function step(dt) {
   holoT += dt;
   if (holoT > 1 / 12) { holoT = 0; drawHologram(room.A, info, fake ? null : music.spectrum(), T); }
   ui.update(info, T);
+  video?.update();
 }
 
 const dbg = {
@@ -263,7 +275,7 @@ let last = performance.now();
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
-  if (!dev?.paused) { step(dt); adapt(dt); }
+  if (!dev?.paused) { step(dt); if (!VIDEO) adapt(dt); }
   render();
   requestAnimationFrame(frame);
 }
