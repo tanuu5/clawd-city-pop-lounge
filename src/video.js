@@ -11,7 +11,8 @@ import { JP_FONT, SCRIPT_FONT } from './scene/textures.js';
 const SCHEDULE = [[0, 'sunset'], [0.2, 'night'], [0.5, 'rain'], [0.76, 'dawn']];
 const TITLE_HOLD = 9;
 
-export function setupVideoMode({ minutes, music, setEnv, post, anim, director }) {
+// from / track：途中から録るとき（録画が途切れた続きを録ってつなぐ）。from 秒の時点から、track 曲目を頭から流す
+export function setupVideoMode({ minutes, music, setEnv, post, anim, director, from = 0, track = 0 }) {
   const total = minutes * 60;
   const W = 1920, H = 1080;
   const canvas = document.createElement('canvas');
@@ -123,12 +124,15 @@ export function setupVideoMode({ minutes, music, setEnv, post, anim, director })
       state.recorder = null;
     },
     async begin() {
-      setEnv(SCHEDULE[0][1], true);
-      state.phase = 0;
+      let ph = 0;
+      for (let i = 0; i < SCHEDULE.length; i++) if (from / total >= SCHEDULE[i][0]) ph = i;
+      setEnv(SCHEDULE[ph][1], true);
+      state.phase = ph;
       director.setMode('auto');
-      state.t0 = performance.now();
+      state.t0 = performance.now() - from * 1000;
       state.started = true;
-      show('title');
+      if (from > 0) anim.snap('listen'); else show('title');
+      music.trackIndex = track;
       await music.play();
     },
     status() {

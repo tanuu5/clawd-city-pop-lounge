@@ -4,8 +4,10 @@
 //   npm run dev                                   # 開発サーバー（/__append で書き出しを受け取る）
 //   caffeinate -dims node dev/record-video.mjs --minutes 60   # shots/video/lounge-60min.mp4 と chapters.txt ができる
 //
-// 画面が消えると（ディスプレイのスリープ）、ヘッドレス Chrome の描画も止まる。録画中は caffeinate -d で画面を
-// 消さないようにする。描画や書き出しが止まったら、見張りが気づいて終了コード 2 で止める。
+// Chrome の MP4 録画は、ファイルが 4GB（2^32 バイト）に達すると止まる（60 分・10Mbps で 55 分 50 秒の所で止まった）。
+// ビットレートは、長さから 4GB に収まる値を自動で選ぶ。念のため画面も消さない（caffeinate -d）。
+// 描画や書き出しが止まったら、見張りが気づいて終了コード 2 で止める。
+// 途中で切れたときは --from <秒> --track <曲> で続きだけ録り、曲の切れ目の無音でつなぐ。
 //
 // ヘッドレス Chrome（Mac の実 GPU）で ?video=<分> を開き、MediaRecorder（H.264 / AAC）で
 // キャンバスと音をそのまま録る。指定の長さが近づくと、今の曲の終わりで Clawd が眠り、暗転して止まる。
@@ -20,7 +22,10 @@ const minutes = +arg('minutes', 60);
 const base = arg('url', 'http://127.0.0.1:5183/');
 const name = arg('name', `video/lounge-${minutes}min.mp4`);
 const seekTo = arg('seek', null); // 確認用：最初の曲の何秒目へ飛ぶか
-const vbr = +arg('vbr', 10e6);
+const from = arg('from', null);   // 途中から録る：動画の何秒目から
+const track = arg('track', null); //              何曲目（0 始まり）を頭から
+// Chrome の MP4 録画は 4GB（2^32 バイト）を超えると止まる。超えないビットレートにする（音の 256kbps と余裕を見込む）
+const vbr = +arg('vbr', Math.min(10e6, Math.floor((3.6e9 * 8) / ((minutes + 3) * 60) - 256e3)));
 
 const CHROME = [process.env.CHROME_PATH, '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/Applications/Chromium.app/Contents/MacOS/Chromium']
   .filter(Boolean).find((p) => existsSync(p));
@@ -38,7 +43,7 @@ const page = await browser.newPage();
 await page.setViewport({ width: 1920, height: 1080, deviceScaleFactor: 1 });
 page.on('pageerror', (e) => console.log('[page error]', e.message));
 page.on('console', (m) => { if (m.type() === 'error') console.log('[page]', m.text()); });
-await page.goto(`${base}?video=${minutes}`, { waitUntil: 'load', timeout: 120000 });
+await page.goto(`${base}?video=${minutes}${from ? `&from=${from}` : ''}${track ? `&track=${track}` : ''}`, { waitUntil: 'load', timeout: 120000 });
 await page.waitForFunction('window.__video?.state.ready && window.__dev?.ready', { timeout: 120000, polling: 200 });
 await page.evaluate(() => document.fonts.ready);
 await new Promise((r) => setTimeout(r, 2500)); // 最初の環境マップを撮り終えるまで
@@ -50,7 +55,7 @@ if (seekTo) {
   await new Promise((r) => setTimeout(r, 12000));
   await page.evaluate((s) => window.__dev.music.load(0, +s), seekTo);
 }
-console.log(`録画開始：${name}（${minutes} 分の予定）`);
+console.log(`録画開始：${name}（${minutes} 分の予定、映像 ${(vbr / 1e6).toFixed(1)} Mbps）`);
 
 const file = path.join('shots', name);
 const sizeOf = () => { try { return statSync(file).size; } catch { return 0; } };

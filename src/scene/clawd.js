@@ -167,6 +167,9 @@ export class ClawdAnimator {
   /** クリックされたとき */
   poke() { if (this.state === 'window') return; this.start('joy', 1.6); this.jump = 1; }
 
+  /** その状態のポーズへ、なめらかにではなく一気に移る（録画の途中から始めるとき） */
+  snap(state) { this.state = state; this.cur = { ...POSES[state] }; this.amt = 1; this.idleTime = 0; }
+
   /** 振り返って窓の外を眺める（sec 秒） */
   lookOutside(sec = 9) { if (this.state === 'sleep') return; this.start('window', sec); this.jump = 0.6; }
 

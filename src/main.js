@@ -143,7 +143,7 @@ document.querySelectorAll('[data-cam]').forEach((b) => b.classList.toggle('on', 
 if (params.has('clean') || VIDEO) { document.body.classList.add('clean'); document.getElementById('start').classList.add('hide'); }
 
 // 動画モード：録画スクリプトが __video.begin() を呼ぶ。手で見るときは、クリックか Space で始まる
-const video = VIDEO ? setupVideoMode({ minutes: VIDEO, music, setEnv, post, anim, director }) : null;
+const video = VIDEO ? setupVideoMode({ minutes: VIDEO, music, setEnv, post, anim, director, from: +params.get('from') || 0, track: +params.get('track') || 0 }) : null;
 if (video) {
   window.__video = video;
   const go = (e) => { if (video.state.started) return; e.preventDefault(); e.stopImmediatePropagation(); video.begin(); };

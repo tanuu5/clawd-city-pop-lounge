@@ -82,7 +82,7 @@ npm run build    # dist/ に書き出し
 - `?dev` を付ける（開発サーバーでは常に）と、確認用のフック `window.__dev` が使えます（`__dev.goto('sunset')`、`__dev.goto('clawd')` など）。`?clean=1` で UI を隠します。
 - `dev/audio-test.html`（開発サーバーのみ）で、曲の一部をオフラインで書き出して音量を測れます。
 - `?video=60` は動画モードです。UI を出さずに自動で再生し、60 分かけて時間帯を夕暮れ → 夜 → 雨の夜 → 夜明けと移し、曲名を画面に重ねます。終わりが近づくと今の曲の終わりで止まり、Clawd が眠ってから暗転します。
-- `caffeinate -dims node dev/record-video.mjs --minutes 60` で、動画モードをヘッドレス Chrome で開き、映像と音を実時間で録画します（開発サーバーを起動しておく。`shots/video/` に MP4 とチャプター一覧ができます）。Mac の画面が消えると描画も止まるので、`caffeinate -d` で画面を消さないようにします。止まったときは、見張りが気づいて終了します。
+- `caffeinate -dims node dev/record-video.mjs --minutes 60` で、動画モードをヘッドレス Chrome で開き、映像と音を実時間で録画します（開発サーバーを起動しておく。`shots/video/` に MP4 とチャプター一覧ができます）。Chrome の MP4 録画はファイルが 4GB を超えると止まるので、ビットレートは長さから 4GB に収まる値を自動で選びます。止まったときは見張りが気づいて終了し、`--from <秒> --track <曲>` で続きだけを録ってつなげます。
 
 | ファイル | 中身 |
 |---|---|
