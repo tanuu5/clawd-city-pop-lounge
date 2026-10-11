@@ -4,7 +4,7 @@
 // 曲ごとにチャンネル（楽器ごとの GainNode）を作り直すので、曲送りのときは古いチャンネルを
 // 絞るだけで、予約済みの音もまとめて消える。
 
-import { generateSong, PLAYLIST, STYLE_KEYS } from './composer.js';
+import { generateSong, makeTitle, PLAYLIST, STYLE_KEYS } from './composer.js';
 import { Instruments, makeResources } from './instruments.js';
 
 // チャンネル：音量、定位、行き先（dry / chorus / bass）、センド量
@@ -251,12 +251,28 @@ export class MusicEngine {
 
   songFor(i) {
     if (!this.songCache.has(i)) {
+      for (let j = 0; j < i; j++) this.songFor(j); // 曲名を前の曲とくらべるので、前から順に作る
       const t = trackAt(i);
       const s = generateSong(t.seed, t);
       s.no = t.no;
+      if (i >= PLAYLIST.length) this.retitle(s, i);
       this.songCache.set(i, s);
     }
     return this.songCache.get(i);
+  }
+
+  /** 9 曲目から：前の曲と曲名が重ならず、直前の 5 曲と同じ単語も使わない曲名を選ぶ。 */
+  retitle(s, i) {
+    const prev = Array.from({ length: i }, (_, j) => this.songCache.get(j));
+    const usedT = new Set(prev.map((p) => p.title)), usedJ = new Set(prev.map((p) => p.titleJa));
+    const recent = new Set(prev.slice(-5).flatMap((p) => p.words));
+    for (let a = 1; a < 200; a++) {
+      const t = makeTitle(s.seed, a);
+      if (usedT.has(t.title) || usedJ.has(t.titleJa)) continue;
+      if (a < 150 && t.words.some((w) => recent.has(w))) continue;
+      Object.assign(s, t);
+      return;
+    }
   }
 
   ensure() {

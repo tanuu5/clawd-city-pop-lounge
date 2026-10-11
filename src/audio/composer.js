@@ -141,6 +141,22 @@ const JA_A = ['摩天楼', '47階', '真夜中', '湾岸線', '水曜日', '金�
 const JA_B = ['ラウンジ', 'ララバイ', 'カクテル', 'ため息', 'シルエット', 'ネオン', 'サマータイム', 'ささやき',
   'バルコニー', 'レコード', 'フィルム', '残り香', 'ランデヴー', 'パノラマ', 'エアメール'];
 
+/**
+ * 曲名。attempt = 0 は最初に公開した 8 曲と同じ作り方。
+ * 9 曲目からは attempt を 1 から増やし、前の曲と重ならない曲名を選ぶ（engine.songFor）。
+ */
+export function makeTitle(seed, attempt = 0) {
+  const RT = makeRng(attempt === 0 ? seed * 31 + 7 : mixSeed(seed * 31 + 7 + attempt * 7919));
+  const a = RT.pick(EN_A), b = RT.pick(EN_B), ja = RT.pick(JA_A), jb = RT.pick(JA_B);
+  return { title: `${a} ${b}`, titleJa: `${ja}の${jb}`, words: [a, b, ja, jb] };
+}
+
+function mixSeed(x) { // 近いシードから似た並びが出ないよう、ビットをよく混ぜる
+  x = Math.imul((x >>> 16) ^ x, 0x45d9f3b);
+  x = Math.imul((x >>> 16) ^ x, 0x45d9f3b);
+  return ((x >>> 16) ^ x) >>> 0;
+}
+
 // 再生リスト（固定のシード → いつ開いても同じ 8 曲）。年はシティポップの全盛期にちなむ。
 export const PLAYLIST = [
   { seed: 1984, style: 'groove', key: 5 },
@@ -397,14 +413,12 @@ export function generateSong(seed, hint = {}) {
   }
   const totalBars = bar;
   const lengthSteps = totalBars * 16;
-  const RT = makeRng(seed * 31 + 7);
-  const title = `${RT.pick(EN_A)} ${RT.pick(EN_B)}`;
-  const titleJa = `${RT.pick(JA_A)}の${RT.pick(JA_B)}`;
+  const { title, titleJa, words } = makeTitle(seed, 0);
   const outro = sections.find((s) => s.type === 'outro');
 
   return {
     seed, style: styleKey, styleLabel: st.label, bpm, keyPc, keyName: keyName + ' メジャー', swing: st.swing,
-    title, titleJa, leadPatch, modUp, ending,
+    title, titleJa, words, leadPatch, modUp, ending,
     progNames: { A: progs.A.name, B: progs.B.name, C: progs.C.name },
     sections: sections.map((s) => ({ type: s.type, label: s.label, startBar: s.startBar, bars: s.bars, energy: s.energy })),
     bars, events, kicks: meta.kicks, kimes: meta.kimes, lengthSteps,
