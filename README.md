@@ -12,6 +12,8 @@
 
 <p align="center"><b><a href="https://tanuu5.github.io/clawd-city-pop-lounge/">▶ ブラウザで開く</a></b>（インストール不要・音が出ます）　／　<b><a href="https://youtu.be/FQ4wE-IDKeE">▶ 作業用BGM 1時間（YouTube）</a></b></p>
 
+<p align="center">続編：<b><a href="https://github.com/tanuu5/clawd-flow-desk">Flow Desk — Clawd の作業部屋</a></b>（同じビルの 62 階で、Clawd が作業用の曲を聴きながら仕事をします。集中タイマー付き）</p>
+
 **Claude Code × Claude Opus 5.5（XHIGH）** で作りました。
 
 ゲームではなく、眺めて聴く作品です。流れる曲はその場で自動作曲し、Web Audio で合成しています（音声ファイルは使っていません）。部屋も夜景も Clawd も、すべてコードで作っています。時間帯は夕暮れ・夜・雨の夜・夜明けの 4 つで、カメラは曲のセクションの変わり目でカットを切り替えます。
@@ -78,6 +80,7 @@
 
 ## 更新履歴
 
+- **2026-10-12**：続編の [Flow Desk](https://github.com/tanuu5/clawd-flow-desk) を公開
 - **2026-10-12**：作業用 BGM の動画（1 時間）を YouTube で公開
 - **2026-10-11**：夜明けの時間帯と、作業用 BGM の動画を録るための動画モード（`?video=<分>`）を追加
 - **2026-10-11**：公開
